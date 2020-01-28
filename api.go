@@ -68,21 +68,15 @@ func (api *API) request(method string, url string, body io.Reader, target interf
 		return
 	}
 	status = Status{res.StatusCode, ""}
-	switch status.Code {
-	case 400:
-		status.Message = "external service: bad request"
+	switch {
+	case status.Code / 100 == 4:
+		status.Message = "external service: request failed"
 		return
-	case 401:
-		status.Message = "external service: unauthorized"
-		return
-	case 403:
-		status.Message = "external service: forbidden"
-		return
-	case 404:
-		status.Message = "external service: not found"
-		return
-	case 500:
+	case status.Code / 100 == 5:
 		status.Message = "external service: unavailable"
+		return
+	}
+	if target == nil {
 		return
 	}
 	err = json.NewDecoder(res.Body).Decode(target)
